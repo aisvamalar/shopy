@@ -1,0 +1,493 @@
+{% comment %}
+  Renders a photo retrieval container for product themes
+
+  Accepts:
+  - container_id: {String} Unique identifier for the container (optional)
+  - placeholder_text: {String} Text to display when no image is loaded (optional)
+  - container_class: {String} Additional CSS classes for the container (optional)
+  - image_url: {String} URL of the image to display (optional)
+  - alt_text: {String} Alt text for the image (optional)
+  - loading_state: {String} Loading state ('idle', 'loading', 'loaded', 'error') (optional)
+
+  Usage:
+  {% render 'photo-retrieval-container',
+    container_id: 'photo-retrieval-1',
+    placeholder_text: 'Upload or select a photo',
+    image_url: 'https://example.com/image.jpg',
+    alt_text: 'Product photo'
+  %}
+{% endcomment %}
+
+{%- liquid
+  assign container_id = container_id | default: 'photo-retrieval-' | append: 'now' | date: '%s%N'
+  assign placeholder_text = placeholder_text | default: 'No image selected'
+  assign container_class = container_class | default: ''
+  assign loading_state = loading_state | default: 'idle'
+  assign image_url = image_url | default: ''
+  assign alt_text = alt_text | default: 'Photo retrieval image'
+-%}
+
+<div
+  id="{{ container_id }}"
+  class="photo-retrieval-container global-media-settings gradient{{ container_class }}"
+  data-loading-state="{{ loading_state }}"
+  style="--ratio: 1.0; --preview-ratio: 1.0;"
+>
+  <div class="photo-retrieval__wrapper">
+    {%- if image_url != blank -%}
+      <div class="photo-retrieval__image-container">
+        <img
+          src="{{ image_url }}"
+          alt="{{ alt_text | escape }}"
+          class="photo-retrieval__image"
+          loading="lazy"
+          width="400"
+          height="400"
+          style="object-fit: cover; width: 100%; height: 100%;"
+        >
+        <button
+          class="photo-retrieval__remove-btn"
+          type="button"
+          aria-label="Remove image"
+          data-action="remove-image"
+        >
+          <span class="svg-wrapper">
+            {{- 'icon-close.svg' | inline_asset_content -}}
+          </span>
+        </button>
+      </div>
+    {%- else -%}
+      <div class="photo-retrieval__placeholder">
+        <div class="photo-retrieval__placeholder-content">
+          <span class="photo-retrieval__placeholder-icon">
+            {{- 'icon-image.svg' | inline_asset_content -}}
+          </span>
+          <p class="photo-retrieval__placeholder-text">{{ placeholder_text }}</p>
+          <button
+            class="photo-retrieval__upload-btn button button--secondary"
+            type="button"
+            aria-label="Upload photo"
+            data-action="upload-photo"
+          >
+            <span class="svg-wrapper">
+              {{- 'icon-plus.svg' | inline_asset_content -}}
+            </span>
+            <span>Upload Photo</span>
+          </button>
+        </div>
+      </div>
+    {%- endif -%}
+    
+    <div class="photo-retrieval__loading" data-loading-indicator style="display: none;">
+      {%- render 'loading-spinner' -%}
+      <span class="photo-retrieval__loading-text">Processing image...</span>
+    </div>
+    
+    <div class="photo-retrieval__error" data-error-message style="display: none;">
+      <span class="svg-wrapper">
+        {{- 'icon-error.svg' | inline_asset_content -}}
+      </span>
+      <span class="photo-retrieval__error-text">Failed to load image</span>
+    </div>
+  </div>
+  
+  <input
+    type="file"
+    class="photo-retrieval__file-input"
+    accept="image/*"
+    data-file-input
+    style="display: none;"
+    aria-label="Select image file"
+  >
+</div>
+
+<style>
+  .photo-retrieval-container {
+    --photo-retrieval-border-radius: 8px;
+    --photo-retrieval-border-color: rgba(var(--color-foreground), 0.08);
+    --photo-retrieval-background: rgba(var(--color-foreground), 0.02);
+    --photo-retrieval-hover-background: rgba(var(--color-foreground), 0.04);
+    --photo-retrieval-text-color: rgba(var(--color-foreground), 0.75);
+    --photo-retrieval-icon-color: rgba(var(--color-foreground), 0.5);
+    
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid var(--photo-retrieval-border-color);
+    border-radius: var(--photo-retrieval-border-radius);
+    background: var(--photo-retrieval-background);
+    transition: all 0.2s ease-in-out;
+  }
+
+  .photo-retrieval-container:hover {
+    background: var(--photo-retrieval-hover-background);
+    border-color: rgba(var(--color-foreground), 0.12);
+  }
+
+  .photo-retrieval__wrapper {
+    position: relative;
+    width: 100%;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .photo-retrieval__image-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 200px;
+  }
+
+  .photo-retrieval__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: calc(var(--photo-retrieval-border-radius) - 1px);
+  }
+
+  .photo-retrieval__remove-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(var(--color-foreground), 0.8);
+    color: rgb(var(--color-background));
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .photo-retrieval__remove-btn:hover {
+    background: rgba(var(--color-foreground), 0.9);
+    transform: scale(1.05);
+  }
+
+  .photo-retrieval__remove-btn .svg-wrapper {
+    width: 16px;
+    height: 16px;
+  }
+
+  .photo-retrieval__placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .photo-retrieval__placeholder-content {
+    text-align: center;
+    color: var(--photo-retrieval-text-color);
+  }
+
+  .photo-retrieval__placeholder-icon {
+    display: block;
+    margin-bottom: 1rem;
+  }
+
+  .photo-retrieval__placeholder-icon .svg-wrapper {
+    width: 48px;
+    height: 48px;
+    color: var(--photo-retrieval-icon-color);
+  }
+
+  .photo-retrieval__placeholder-text {
+    margin: 0 0 1.5rem 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  .photo-retrieval__upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .photo-retrieval__upload-btn .svg-wrapper {
+    width: 16px;
+    height: 16px;
+  }
+
+  .photo-retrieval__loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--color-background), 0.9);
+    border-radius: var(--photo-retrieval-border-radius);
+    gap: 1rem;
+  }
+
+  .photo-retrieval__loading-text {
+    font-size: 0.9rem;
+    color: var(--photo-retrieval-text-color);
+  }
+
+  .photo-retrieval__error {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--color-background), 0.9);
+    border-radius: var(--photo-retrieval-border-radius);
+    gap: 0.5rem;
+    color: rgb(var(--color-error));
+  }
+
+  .photo-retrieval__error .svg-wrapper {
+    width: 24px;
+    height: 24px;
+  }
+
+  .photo-retrieval__error-text {
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  /* Responsive adjustments */
+  @media screen and (max-width: 749px) {
+    .photo-retrieval-container {
+      max-width: 100%;
+    }
+    
+    .photo-retrieval__wrapper {
+      min-height: 150px;
+    }
+    
+    .photo-retrieval__image-container {
+      min-height: 150px;
+    }
+  }
+
+  /* Loading state styles */
+  .photo-retrieval-container[data-loading-state="loading"] .photo-retrieval__loading {
+    display: flex;
+  }
+
+  .photo-retrieval-container[data-loading-state="error"] .photo-retrieval__error {
+    display: flex;
+  }
+</style>
+
+<script>
+  class PhotoRetrievalContainer {
+    constructor(container) {
+      this.container = container;
+      this.fileInput = container.querySelector('[data-file-input]');
+      this.uploadBtn = container.querySelector('[data-action="upload-photo"]');
+      this.removeBtn = container.querySelector('[data-action="remove-image"]');
+      this.loadingIndicator = container.querySelector('[data-loading-indicator]');
+      this.errorMessage = container.querySelector('[data-error-message]');
+      
+      this.init();
+    }
+
+    init() {
+      if (this.uploadBtn) {
+        this.uploadBtn.addEventListener('click', () => this.handleUploadClick());
+      }
+      
+      if (this.removeBtn) {
+        this.removeBtn.addEventListener('click', () => this.handleRemoveClick());
+      }
+      
+      if (this.fileInput) {
+        this.fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+      }
+    }
+
+    handleUploadClick() {
+      this.fileInput?.click();
+    }
+
+    handleRemoveClick() {
+      this.setLoadingState('idle');
+      this.clearImage();
+    }
+
+    handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (file && file.type.startsWith('image/')) {
+        this.processImage(file);
+      }
+    }
+
+    processImage(file) {
+      this.setLoadingState('loading');
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.displayImage(e.target.result);
+        this.setLoadingState('loaded');
+      };
+      
+      reader.onerror = () => {
+        this.setLoadingState('error');
+      };
+      
+      reader.readAsDataURL(file);
+    }
+
+    displayImage(imageUrl) {
+      const wrapper = this.container.querySelector('.photo-retrieval__wrapper');
+      const placeholder = this.container.querySelector('.photo-retrieval__placeholder');
+      
+      if (placeholder) {
+        placeholder.remove();
+      }
+      
+      const imageContainer = this.container.querySelector('.photo-retrieval__image-container') || this.createImageContainer();
+      const image = imageContainer.querySelector('.photo-retrieval__image');
+      
+      if (image) {
+        image.src = imageUrl;
+      }
+      
+      if (!this.container.querySelector('.photo-retrieval__image-container')) {
+        wrapper.appendChild(imageContainer);
+      }
+    }
+
+    createImageContainer() {
+      const container = document.createElement('div');
+      container.className = 'photo-retrieval__image-container';
+      
+      const image = document.createElement('img');
+      image.className = 'photo-retrieval__image';
+      image.alt = 'Uploaded photo';
+      image.loading = 'lazy';
+      image.width = 400;
+      image.height = 400;
+      image.style.objectFit = 'cover';
+      image.style.width = '100%';
+      image.style.height = '100%';
+      
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'photo-retrieval__remove-btn';
+      removeBtn.type = 'button';
+      removeBtn.setAttribute('aria-label', 'Remove image');
+      removeBtn.setAttribute('data-action', 'remove-image');
+      
+      const icon = document.createElement('span');
+      icon.className = 'svg-wrapper';
+      icon.innerHTML = this.getCloseIcon();
+      
+      removeBtn.appendChild(icon);
+      removeBtn.addEventListener('click', () => this.handleRemoveClick());
+      
+      container.appendChild(image);
+      container.appendChild(removeBtn);
+      
+      return container;
+    }
+
+    clearImage() {
+      const imageContainer = this.container.querySelector('.photo-retrieval__image-container');
+      if (imageContainer) {
+        imageContainer.remove();
+      }
+      
+      const placeholder = this.createPlaceholder();
+      const wrapper = this.container.querySelector('.photo-retrieval__wrapper');
+      wrapper.appendChild(placeholder);
+      
+      this.fileInput.value = '';
+    }
+
+    createPlaceholder() {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'photo-retrieval__placeholder';
+      
+      const content = document.createElement('div');
+      content.className = 'photo-retrieval__placeholder-content';
+      
+      const icon = document.createElement('span');
+      icon.className = 'photo-retrieval__placeholder-icon';
+      icon.innerHTML = this.getImageIcon();
+      
+      const text = document.createElement('p');
+      text.className = 'photo-retrieval__placeholder-text';
+      text.textContent = 'No image selected';
+      
+      const uploadBtn = document.createElement('button');
+      uploadBtn.className = 'photo-retrieval__upload-btn button button--secondary';
+      uploadBtn.type = 'button';
+      uploadBtn.setAttribute('aria-label', 'Upload photo');
+      uploadBtn.setAttribute('data-action', 'upload-photo');
+      
+      const plusIcon = document.createElement('span');
+      plusIcon.className = 'svg-wrapper';
+      plusIcon.innerHTML = this.getPlusIcon();
+      
+      const btnText = document.createElement('span');
+      btnText.textContent = 'Upload Photo';
+      
+      uploadBtn.appendChild(plusIcon);
+      uploadBtn.appendChild(btnText);
+      uploadBtn.addEventListener('click', () => this.handleUploadClick());
+      
+      content.appendChild(icon);
+      content.appendChild(text);
+      content.appendChild(uploadBtn);
+      placeholder.appendChild(content);
+      
+      return placeholder;
+    }
+
+    setLoadingState(state) {
+      this.container.setAttribute('data-loading-state', state);
+      
+      if (state === 'loading') {
+        this.loadingIndicator?.style.setProperty('display', 'flex');
+        this.errorMessage?.style.setProperty('display', 'none');
+      } else if (state === 'error') {
+        this.loadingIndicator?.style.setProperty('display', 'none');
+        this.errorMessage?.style.setProperty('display', 'flex');
+      } else {
+        this.loadingIndicator?.style.setProperty('display', 'none');
+        this.errorMessage?.style.setProperty('display', 'none');
+      }
+    }
+
+    getCloseIcon() {
+      return '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4L4 12M4 4L12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    }
+
+    getImageIcon() {
+      return '<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M39 3H9C7.34 3 6 4.34 6 6V42C6 43.66 7.34 45 9 45H39C40.66 45 42 43.66 42 42V6C42 4.34 40.66 3 39 3ZM39 42H9V6H39V42Z" fill="currentColor"/><path d="M15 18C16.66 18 18 16.66 18 15C18 13.34 16.66 12 15 12C13.34 12 12 13.34 12 15C12 16.66 13.34 18 15 18Z" fill="currentColor"/><path d="M39 42L30 33L21 42L15 36L9 42V6H39V42Z" fill="currentColor"/></svg>';
+    }
+
+    getPlusIcon() {
+      return '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 3V13M3 8H13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    }
+  }
+
+  // Initialize photo retrieval containers when DOM is loaded
+  document.addEventListener('DOMContentLoaded', () => {
+    const containers = document.querySelectorAll('.photo-retrieval-container');
+    containers.forEach(container => new PhotoRetrievalContainer(container));
+  });
+</script> 

@@ -1,0 +1,103 @@
+{% comment %}
+  Vitron Virtual Try-On Configuration
+  This snippet injects Shopify theme settings into JavaScript
+{% endcomment %}
+
+<script>
+  // Vitron Configuration from Shopify Settings
+  window.vitronConfig = {
+    // API Settings
+    apiUrl: '{{ settings.vitron_api_url | default: "https://9eb5c1d303ec.ngrok.app" }}',
+    apiKey: '{{ settings.vitron_api_key }}',
+    enabled: {{ settings.vitron_enabled | default: true }},
+    
+    // Try-On Experience Settings
+    buttonText: '{{ settings.vitron_button_text | default: "Virtual Try-On" }}',
+    buttonStyle: '{{ settings.vitron_button_style | default: "primary" }}',
+    showOnAllProducts: {{ settings.vitron_show_on_all_products | default: false }},
+    productTags: '{{ settings.vitron_product_tags | default: "try-on,virtual-try-on,clothing" }}'.split(','),
+    
+    // Processing Settings
+    maxPollAttempts: {{ settings.vitron_max_poll_attempts | default: 30 }},
+    pollInterval: {{ settings.vitron_poll_interval | default: 3000 }},
+    
+    // AI Recommendation Settings
+    aiModelUrl: '{{ settings.vitron_ai_model_url | default: "https://c642f81b0596.ngrok.app" }}',
+    aiModelEnabled: {{ settings.vitron_ai_model_enabled | default: true }},
+    
+    // Full Body Try-On Settings
+    fullBodyApiUrl: '{{ settings.vitron_full_body_api_url | default: "https://9eb5c1d303ec.ngrok.app" }}',
+    fullBodyEnabled: {{ settings.vitron_full_body_enabled | default: true }},
+    fullBodyButtonText: '{{ settings.vitron_full_body_button_text | default: "Try Full Body" }}',
+    fullBodyTimeout: {{ settings.vitron_full_body_timeout | default: 120 }},
+    
+    // Advanced Settings
+    debugMode: {{ settings.vitron_debug_mode | default: false }},
+    enableAnalytics: {{ settings.vitron_enable_analytics | default: true }},
+    
+    // Theme Information
+    shopDomain: '{{ shop.domain }}',
+    shopName: '{{ shop.name }}',
+    currencyCode: '{{ cart.currency.iso_code }}',
+    
+    // Debug Information
+    timestamp: new Date().toISOString(),
+    themeVersion: '{{ theme.name }} v{{ theme.version | default: "1.0.0" }}'
+  };
+
+  // Debug logging if enabled
+  if (window.vitronConfig.debugMode) {
+    console.group('🔧 Vitron Configuration Loaded');
+    console.log('📍 Half Body API:', window.vitronConfig.apiUrl);
+    console.log('🤖 AI Recommendation API:', window.vitronConfig.aiModelUrl);
+    console.log('🚀 Full Body API:', window.vitronConfig.fullBodyApiUrl);
+    console.log('✅ Enabled Features:', {
+      halfBody: window.vitronConfig.enabled,
+      aiRecommendations: window.vitronConfig.aiModelEnabled,
+      fullBody: window.vitronConfig.fullBodyEnabled,
+      analytics: window.vitronConfig.enableAnalytics
+    });
+    console.log('⚙️ Processing Settings:', {
+      maxAttempts: window.vitronConfig.maxPollAttempts,
+      pollInterval: window.vitronConfig.pollInterval + 'ms',
+      fullBodyTimeout: window.vitronConfig.fullBodyTimeout + 's'
+    });
+    console.log('🎨 UI Settings:', {
+      buttonText: window.vitronConfig.buttonText,
+      buttonStyle: window.vitronConfig.buttonStyle,
+      showOnAllProducts: window.vitronConfig.showOnAllProducts,
+      productTags: window.vitronConfig.productTags
+    });
+    console.log('🏪 Shop Info:', {
+      domain: window.vitronConfig.shopDomain,
+      name: window.vitronConfig.shopName,
+      currency: window.vitronConfig.currencyCode
+    });
+    console.log('📅 Loaded at:', window.vitronConfig.timestamp);
+    console.groupEnd();
+  }
+
+  // Analytics tracking if enabled
+  if (window.vitronConfig.enableAnalytics) {
+    // Track configuration load
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'vitron_config_loaded', {
+        'event_category': 'Vitron',
+        'event_label': 'Configuration',
+        'value': 1
+      });
+    }
+    
+    // Track to dataLayer if available
+    if (typeof dataLayer !== 'undefined') {
+      dataLayer.push({
+        'event': 'vitron_config_loaded',
+        'vitron_enabled': window.vitronConfig.enabled,
+        'vitron_ai_enabled': window.vitronConfig.aiModelEnabled,
+        'vitron_full_body_enabled': window.vitronConfig.fullBodyEnabled
+      });
+    }
+  }
+</script>
+
+
